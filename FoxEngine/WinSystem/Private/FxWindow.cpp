@@ -1,6 +1,7 @@
 #include "../Public/FxWindow.h"
+#include <sstream>
 
-//~ WindowClass
+#pragma region FOX_WINDOW
 
 FxWindow::_FxWindowClass FxWindow::_FxWindowClass::m_sWindowClass;
 
@@ -56,7 +57,7 @@ std::optional<int> FxWindow::ProcessMessages() noexcept
 	return {};
 }
 
-LRESULT FxWindow::HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
+LRESULT CALLBACK FxWindow::HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
 {
 	if (msg == WM_NCCREATE)
 	{
@@ -69,7 +70,7 @@ LRESULT FxWindow::HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-LRESULT FxWindow::HandleMessageThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
+LRESULT CALLBACK FxWindow::HandleMessageThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
 {
 	FxWindow* const pWnd = reinterpret_cast<FxWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 	return pWnd->HandleMessage(hWnd, msg, wParam, lParam);
@@ -82,11 +83,13 @@ LRESULT FxWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return S_OK;
-	default:
-		break;
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
+#pragma endregion
+
+#pragma region WINDOW_CLASS
 
 const wchar_t* FxWindow::_FxWindowClass::GetName() noexcept
 {
@@ -124,3 +127,56 @@ FxWindow::_FxWindowClass::~_FxWindowClass()
 {
 	UnregisterClass(GetName(), GetInstance());
 }
+
+#pragma endregion
+
+#pragma region WIN_EXCEPTION
+FxWindow::FxWinException::FxWinException(int line, const char* file, HRESULT hr) noexcept
+	: m_lHR(hr), FxException(line, file)
+{
+
+}
+
+const wchar_t* FxWindow::FxWinException::GetType() const noexcept
+{
+	return L"FxWindowException";
+}
+
+void FxWindow::FxWinException::UpdateInfo() noexcept
+{
+	std::wostringstream woss;
+	woss << GetType() << std::endl
+		<< L"[Error Code] " << GetErrorCode() << std::endl
+		<< L"[Description] " << GetErrorString() << std::endl
+		<< GetOriginString();
+
+	SetInfo(woss.str());
+}
+
+std::wstring FxWindow::FxWinException::TranslateErrorCode(HRESULT hr) noexcept
+{
+	wchar_t* pMsgBuffer = nullptr;
+
+	DWORD nMsgLen = FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		nullptr, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPWSTR>(&pMsgBuffer), 0, nullptr);
+
+	if (nMsgLen == 0) return L"UnIdentified Error Code";
+
+	std::wstring errorString = pMsgBuffer;
+	LocalFree(pMsgBuffer);
+
+	return errorString;
+}
+
+HRESULT FxWindow::FxWinException::GetErrorCode() const noexcept
+{
+	return m_lHR;
+}
+
+std::wstring FxWindow::FxWinException::GetErrorString() const noexcept
+{
+	return TranslateErrorCode(m_lHR);
+}
+
+#pragma endregion

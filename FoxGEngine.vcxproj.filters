@@ -3,9 +3,11 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="FoxEngine\WinSystem\Private\FxWindow.cpp" />
+    <ClCompile Include="FoxEngine\ExcepSystem\Private\FxException.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FoxEngine\WinSystem\FxWinCore.h" />
     <ClInclude Include="FoxEngine\WinSystem\Public\FxWindow.h" />
+    <ClInclude Include="FoxEngine\ExcepSystem\Public\FxException.h" />
   </ItemGroup>
 </Project>

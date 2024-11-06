@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../FxWinCore.h"
+#include "../../ExcepSystem/Public/FxException.h"
 
 #include <string>
 #include <optional>
@@ -23,15 +24,33 @@ public:
 private:
 	
 	static LRESULT CALLBACK HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
-	static LRESULT CALLBACK HandleMessageThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
+	static LRESULT CALLBACK HandleMessageThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;		// ykyk
 	LRESULT HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 
 private:
 	RECT m_sRect;
 	HWND m_hWnd;
 
+public:
+	//~ Exception Class
+	class FxWinException : public FxException
+	{
+	public:
+		FxWinException(int line, const char* file, HRESULT hr) noexcept;
+
+		void UpdateInfo() noexcept override;
+		const wchar_t* GetType() const noexcept override;
+
+		static std::wstring TranslateErrorCode(HRESULT hr) noexcept;
+		HRESULT				GetErrorCode()   const noexcept;
+		std::wstring		GetErrorString() const noexcept;
+
+	private:
+		HRESULT m_lHR;
+	};
+
 private:
-	//~ Singleton Obj
+	//~ Window Registration Class
 	class _FxWindowClass
 	{
 	public:
@@ -49,3 +68,6 @@ private:
 		HINSTANCE					 m_hInstance;
 	};
 };
+
+
+#define FXWND_EXCEPT(hr) FxWindow::FxWinException(__LINE__, __FILE__, hr);

@@ -145,10 +145,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FoxEngine\ExcepSystem\Private\FxException.cpp" />
     <ClCompile Include="FoxEngine\WinSystem\Private\FxWindow.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FoxEngine\ExcepSystem\Public\FxException.h" />
     <ClInclude Include="FoxEngine\WinSystem\FxWinCore.h" />
     <ClInclude Include="FoxEngine\WinSystem\Public\FxWindow.h" />
   </ItemGroup>
