@@ -9,28 +9,31 @@
 FxWindow::_FxWindowClass FxWindow::_FxWindowClass::m_sWindowClass;
 
 FxWindow::FxWindow(RECT windowRect, const wchar_t* windowName)
-	: m_sRect(windowRect)
+	: msRect(windowRect)
 {
 	// calculate window size based on desired client region size
-	if (!AdjustWindowRect(&m_sRect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE))
+	if (!AdjustWindowRect(&msRect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE))
 	{
 		throw FXWND_LAST_EXCEPT();
 	}
 
 	// create window & get hWnd
-	m_hWnd = CreateWindow(
+	mHwnd = CreateWindow(
 		_FxWindowClass::GetName(),
 		windowName,
 		WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		m_sRect.right - m_sRect.left, m_sRect.bottom - m_sRect.top,
+		msRect.right - msRect.left, msRect.bottom - msRect.top,
 		nullptr, nullptr, _FxWindowClass::GetInstance(), this
 	);
 
-	if (m_hWnd == nullptr) throw FXWND_LAST_EXCEPT();
+	if (mHwnd == nullptr) throw FXWND_LAST_EXCEPT();
 
-	ShowWindow(m_hWnd, SW_SHOWDEFAULT);
+	mpRenderAPI = std::make_unique<FxRenderAPI>();
+	mpRenderAPI->Init(mHwnd);
+
+	ShowWindow(mHwnd, SW_SHOWDEFAULT);
 	
 	RAWINPUTDEVICE rid;
 	rid.usUsagePage = 0x01; // mouse page
@@ -42,12 +45,12 @@ FxWindow::FxWindow(RECT windowRect, const wchar_t* windowName)
 
 FxWindow::~FxWindow()
 {
-	DestroyWindow(m_hWnd);
+	DestroyWindow(mHwnd);
 }
 
 void FxWindow::SetTitle(const std::wstring_view& title)
 {
-	SetWindowText(m_hWnd, title.data());
+	SetWindowText(mHwnd, title.data());
 }
 
 std::optional<int> FxWindow::ProcessMessages() noexcept
@@ -63,6 +66,11 @@ std::optional<int> FxWindow::ProcessMessages() noexcept
 		DispatchMessage(&msg);
 	}
 	return {};
+}
+
+FxRenderAPI& FxWindow::RenderAPI()
+{
+	return *mpRenderAPI;
 }
 
 LRESULT CALLBACK FxWindow::HandleMessageSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept
@@ -96,87 +104,102 @@ LRESULT FxWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
 	{
-		if (!(lParam & 0x4'00'00'000) || m_Keyboard.IsAutoRepeatEnabled())
+		if (!(lParam & 0x4'00'00'000) || mKeyboard.IsAutoRepeatEnabled())
 		{
-			m_Keyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
+			mKeyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
 		}
 		return S_OK;
 	}
 	case WM_SYSKEYUP:
 	case WM_KEYUP:
 	{
-		m_Keyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
+		mKeyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
 		return S_OK;
 	}
 	case WM_CHAR:
 	{
-		m_Keyboard.OnChar(static_cast<char>(wParam));
+		mKeyboard.OnChar(static_cast<char>(wParam));
 		return S_OK;
 	}
 	case WM_KILLFOCUS:
 	{
-		m_Keyboard.ClearState();
+		mKeyboard.ClearState();
 		return S_OK;
 	}
 	case WM_LBUTTONDOWN:
 	{
 		const POINTS point = MAKEPOINTS(lParam);
-		m_Mouse.OnLeftMousePressed(point.x, point.y);
+		mMouse.OnLeftMousePressed(point.x, point.y);
 		return S_OK;
 	}
 	case WM_LBUTTONUP:
 	{
 		const POINTS point = MAKEPOINTS(lParam);
-		m_Mouse.OnLeftMouseRelased(point.x, point.y);
+		mMouse.OnLeftMouseRelased(point.x, point.y);
 		return S_OK;
 	}
 	case WM_RBUTTONDOWN:
 	{
 		const POINTS point = MAKEPOINTS(lParam);
-		m_Mouse.OnRightMousePressed(point.x, point.y);
+		mMouse.OnRightMousePressed(point.x, point.y);
 		return S_OK;
 	}
 	case WM_RBUTTONUP:
 	{
 		const POINTS point = MAKEPOINTS(lParam);
-		m_Mouse.OnRightMouseRelased(point.x, point.y);
+		mMouse.OnRightMouseRelased(point.x, point.y);
 		return S_OK;
 	}
 	case WM_MOUSEWHEEL:
 	{
 		const POINTS point = MAKEPOINTS(lParam);
-		auto wheelValue = GET_WHEEL_DELTA_WPARAM(wParam);
+		const int delta = GET_WHEEL_DELTA_WPARAM(wParam);
 
-		if (wheelValue > 0) m_Mouse.OnWheelMouseUp(point.x, point.y);
-		if (wheelValue < 0) m_Mouse.OnWheelMouseDown(point.x, point.y);
+		mMouse.OnWheelDelta(point.x, point.y, delta);
 
 		return S_OK;
 	}
 	case WM_MBUTTONDOWN:
 	{
 		const POINTS point = MAKEPOINTS(lParam);
-		m_Mouse.OnWheelMousePressed(point.x, point.y);
+		mMouse.OnWheelMousePressed(point.x, point.y);
 		return S_OK;
 	}
 	case WM_MBUTTONUP:
 	{
 		const POINTS point = MAKEPOINTS(lParam);
-		m_Mouse.OnWheelMouseReleased(point.x, point.y);
+		mMouse.OnWheelMouseReleased(point.x, point.y);
 		return S_OK;
 	}
 	case WM_MOUSEMOVE:
 	{
 		const POINTS point = MAKEPOINTS(lParam);
-		m_Mouse.OnMouseMove(point.x, point.y);
 
-		std::wstring text = L"[";
-		text.append(std::to_wstring(point.x));
-		text.append(L", ");
-		text.append(std::to_wstring(point.y));
-		text.append(L"]");
-		
-		SetTitle(text);
+		RECT wr;
+		GetClientRect(hWnd, &wr);
 
+		if (point.x >= wr.left && point.y >= wr.top &&
+			point.x < wr.right && point.y < wr.bottom)
+		{
+			if (!mMouse.IsMouseInside())
+			{
+				SetCapture(hWnd);
+				mMouse.OnMouseEnter();
+			}
+			mMouse.OnMouseMove(point.x, point.y);
+		}
+		else
+		{
+			if (wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON))
+			{
+				mMouse.OnMouseMove(point.x, point.y);
+			}
+			else 
+			{
+				ReleaseCapture();
+				mMouse.OnMouseLeave();
+			}
+		}
 		return S_OK;
 	}
 	}

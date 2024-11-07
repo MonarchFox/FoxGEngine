@@ -1,4 +1,5 @@
 #include "../Public/FxMouse.h"
+#include "../Public/FxWinCore.h"
 
 std::pair<int, int> FxMouse::GetPosition() const noexcept
 {
@@ -30,6 +31,11 @@ bool FxMouse::IsMousePressed() const noexcept
 	return m_bMousePressed;
 }
 
+bool FxMouse::IsMouseInside() const noexcept
+{
+	return m_bMouseInside;
+}
+
 FxMouse::FxEvent FxMouse::Read() noexcept
 {
 	if (!IsEmpty())
@@ -38,7 +44,7 @@ FxMouse::FxEvent FxMouse::Read() noexcept
 		m_qBuffer.pop();
 		return e;
 	}
-	return FxMouse::FxEvent();
+	return FxEvent(FxEvent::EventType::INVALID, *this);
 }
 
 void FxMouse::Flush() noexcept
@@ -53,61 +59,90 @@ bool FxMouse::IsEmpty() const noexcept
 
 void FxMouse::OnMouseMove(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::MOVE, false, false, false, x, y));
+	m_qBuffer.push(FxEvent(FxEvent::EventType::MOVE, *this));
 	TrimBuffer();
 }
 
 void FxMouse::OnLeftMousePressed(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::L_PRESS, true, false, false, x, y));
 	m_bLeftPressed = true;
+	m_qBuffer.push(FxEvent(FxEvent::EventType::L_PRESS, *this));
 	TrimBuffer();
 }
 
 void FxMouse::OnLeftMouseRelased(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::L_RELEASE, false, false, false, x, y));
 	m_bLeftPressed = false;
+	m_qBuffer.push(FxEvent(FxEvent::EventType::L_RELEASE, *this));
 	TrimBuffer();
 }
 
 void FxMouse::OnRightMousePressed(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::R_PRESS, false, true, false, x, y));
 	m_bRightPressed = true;
+	m_qBuffer.push(FxEvent(FxEvent::EventType::R_PRESS, *this));
 	TrimBuffer();
 }
 
 void FxMouse::OnRightMouseRelased(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::R_RELEASE, false, false, false, x, y));
 	m_bRightPressed = true;
+	m_qBuffer.push(FxEvent(FxEvent::EventType::R_RELEASE, *this));
 }
 
 void FxMouse::OnWheelMouseUp(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::WHEEL_UP, false, false, false, x, y));
+	m_qBuffer.push(FxEvent(FxEvent::EventType::WHEEL_UP, *this));
 	TrimBuffer();
 }
 
 void FxMouse::OnWheelMouseDown(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::WHEEL_DOWN, false, false, false, x, y));
+	m_qBuffer.push(FxEvent(FxEvent::EventType::WHEEL_DOWN, *this));
 	TrimBuffer();
 }
 
 void FxMouse::OnWheelMousePressed(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::WHEEL_PRESS, false, false, true, x, y));
 	m_bMousePressed = true;
+	m_qBuffer.push(FxEvent(FxEvent::EventType::WHEEL_PRESS, *this));
 	TrimBuffer();
 }
 
 void FxMouse::OnWheelMouseReleased(int x, int y) noexcept
 {
-	m_qBuffer.push(FxEvent(FxEvent::EventType::WHEEL_RELEASE, false, false, false, x, y));
 	m_bMousePressed = false;
+	m_qBuffer.push(FxEvent(FxEvent::EventType::WHEEL_RELEASE, *this));
 	TrimBuffer();
+}
+
+void FxMouse::OnMouseLeave() noexcept
+{
+	m_bMouseInside = false;
+	m_qBuffer.push(FxEvent(FxEvent::EventType::LEAVE, *this));
+}
+
+void FxMouse::OnMouseEnter() noexcept
+{
+	m_bMouseInside = true;
+	m_qBuffer.push(FxEvent(FxEvent::EventType::ENTER, *this));
+}
+
+void FxMouse::OnWheelDelta(int x, int y, int delta) noexcept
+{
+	m_iDelta += delta;
+
+	while (m_iDelta >= WHEEL_DELTA)
+	{
+		m_iDelta -= WHEEL_DELTA;
+		OnWheelMouseUp(x, y);
+	}
+
+	while (m_iDelta <= WHEEL_DELTA)
+	{
+		m_iDelta += WHEEL_DELTA;
+		OnWheelMouseDown(x, y);
+	}
 }
 
 void FxMouse::TrimBuffer() noexcept

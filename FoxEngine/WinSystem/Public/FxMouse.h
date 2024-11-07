@@ -23,7 +23,9 @@ public:
 			WHEEL_PRESS,
 			WHEEL_RELEASE,
 			MOVE,
-			INVALID
+			INVALID,
+			ENTER,
+			LEAVE,
 		};
 
 	private:
@@ -34,13 +36,9 @@ public:
 		int m_PositionX, m_PositionY;
 
 	public:
-		FxEvent() : mEventType(EventType::INVALID), m_bLeftPressed(false), m_bWheelPressed(false),
-					m_bRightPressed(false), m_PositionX(0), m_PositionY(0)
-		{}
-
-		FxEvent(EventType eventType, bool leftPressed, bool rightPressed, bool wheelPressed, int x, int y)
-			: mEventType(eventType), m_bLeftPressed(leftPressed), m_bWheelPressed(wheelPressed),
-			  m_bRightPressed(rightPressed), m_PositionX(x), m_PositionY(y)
+		FxEvent(EventType eventType, const FxMouse& parent)
+			: mEventType(eventType), m_bLeftPressed(parent.IsLeftPressed()), m_bWheelPressed(parent.IsMousePressed()),
+			  m_bRightPressed(parent.IsRightPressed()), m_PositionX(GetPositionX()), m_PositionY(GetPositionY())
 		{}
 
 		std::pair<int, int> GetPosition() const noexcept { return { m_PositionX, m_PositionY }; }
@@ -66,13 +64,14 @@ public:
 	int GetPositionX() const noexcept;
 	int GetPositionY() const noexcept;
 
-	bool IsLeftPressed() const noexcept;
+	bool IsLeftPressed()  const noexcept;
 	bool IsRightPressed() const noexcept;
 	bool IsMousePressed() const noexcept;
+	bool IsMouseInside()  const noexcept;
 
 	FxMouse::FxEvent Read() noexcept;
 
-	void Flush() noexcept;
+	void Flush()   noexcept;
 	bool IsEmpty() const noexcept;
 
 private:
@@ -90,6 +89,11 @@ private:
 	void OnWheelMousePressed(int x, int y) noexcept;
 	void OnWheelMouseReleased(int x, int y) noexcept;
 
+	void OnMouseLeave() noexcept;
+	void OnMouseEnter() noexcept;
+
+	void OnWheelDelta(int x, int y, int delta) noexcept;
+
 	void TrimBuffer() noexcept;
 
 private:
@@ -97,7 +101,9 @@ private:
 	static constexpr unsigned int m_BufferSize{ 16u };
 	int		m_iPositionX{ 0 };
 	int		m_iPositionY{ 0 };
+	int		m_iDelta	{ 0 };
 	bool	m_bLeftPressed { false };
 	bool	m_bRightPressed{ false };
 	bool	m_bMousePressed{ false };
+	bool	m_bMouseInside { false };
 };

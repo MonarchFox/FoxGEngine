@@ -2,13 +2,18 @@
 
 #include "FxKeyboard.h"
 #include "FxMouse.h"
+#include "../../Renderer/Public/FxRenderAPI.h"
 
 #include "FxWinCore.h"
-#include "../../ExcepSystem/Public/FxException.h"
+#include "../../ExceptionHandler/Public/FxException.h"
 
 #include <string>
 #include <optional>
 #include <memory>
+
+
+// TODO: Create TimerClass.
+// TODO: Create Application Class.
 
 
 class FxWindow
@@ -24,11 +29,13 @@ public:
 	void SetTitle(const std::wstring_view& title);
 
 	static std::optional<int> ProcessMessages() noexcept;
+	
+	FxRenderAPI& RenderAPI();
 
 public:
 	//~ Public Members
-	FxKeyboard  m_Keyboard;
-	FxMouse		m_Mouse;
+	FxKeyboard  mKeyboard;
+	FxMouse		mMouse;
 
 private:
 	
@@ -37,8 +44,9 @@ private:
 	LRESULT HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 
 private:
-	RECT m_sRect;
-	HWND m_hWnd;
+	RECT msRect;
+	HWND mHwnd;
+	std::unique_ptr<FxRenderAPI> mpRenderAPI = nullptr;
 
 public:
 	//~ Exception Class
