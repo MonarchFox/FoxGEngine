@@ -8,10 +8,9 @@ class FxException : public std::exception
 {
 public:
 	FxException(int line, const char* file) noexcept;
-	const char* what() const noexcept override;
+	const wchar_t* what_w() noexcept;
 
 	virtual void UpdateInfo() noexcept;
-	void SetInfo(std::wstring info) noexcept;
 
 	
 	virtual const wchar_t* GetType() const noexcept;
@@ -23,8 +22,8 @@ public:
 
 private:
 	int m_iLine;
-	std::string m_szFile;
+	std::wstring m_szFile;
 
 protected:
-	mutable std::string WhatBuffer;
+	mutable std::wstring WhatBuffer;
 };

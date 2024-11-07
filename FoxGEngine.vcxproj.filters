@@ -1,13 +1,53 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="FoxEngine\WinSystem\Private\FxWindow.cpp" />
-    <ClCompile Include="FoxEngine\ExcepSystem\Private\FxException.cpp" />
+    <ClCompile Include="FoxEngine\ExcepSystem\Private\FxException.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FoxEngine\WinSystem\Private\FxWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FoxEngine\WinSystem\Private\FxKeyboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FoxEngine\WinSystem\Private\FxMouse.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FoxEngine\WinSystem\FxWinCore.h" />
-    <ClInclude Include="FoxEngine\WinSystem\Public\FxWindow.h" />
-    <ClInclude Include="FoxEngine\ExcepSystem\Public\FxException.h" />
+    <ClInclude Include="FoxEngine\ExcepSystem\Public\FxException.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FoxEngine\WinSystem\Public\FxWinCore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FoxEngine\WinSystem\Public\FxWindow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="FoxEngine\WinSystem\Public\FxKeyboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FoxEngine\WinSystem\Public\FxMouse.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{0b113ec6-d660-4633-bb17-a2caf7098031}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{790e951c-b5d6-4766-8797-bac17bbd68aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{2e8f92fc-0768-44c3-a384-6dacda094645}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FoxGEngine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resource\fox_icon.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

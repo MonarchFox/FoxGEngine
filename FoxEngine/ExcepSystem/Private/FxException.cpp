@@ -3,29 +3,28 @@
 
 
 FxException::FxException(int line, const char* file) noexcept
-	: m_iLine(line), m_szFile(file)
+	: m_iLine(line)
 {
-
+	m_szFile = std::wstring(file, file + strlen(file));
 }
 
-const char* FxException::what() const noexcept
+const wchar_t* FxException::what_w() noexcept
 {
+	UpdateInfo();
+	
+	std::wostringstream oss;
+	oss << L"[Line number] " << GetLine() << std::endl
+		<< L"[File] " << GetFile() << std::endl
+		<< GetOriginString();
+
+	WhatBuffer.append(oss.str());
+
 	return WhatBuffer.c_str();
 }
 
 void FxException::UpdateInfo() noexcept
 {
-	std::wostringstream oss;
-	oss << GetType() << std::endl
-		<< GetOriginString();
 
-	SetInfo(oss.str());
-}
-
-void FxException::SetInfo(std::wstring info) noexcept
-{
-	std::wstring wideWhatBuffer = info;
-	WhatBuffer = std::string(wideWhatBuffer.begin(), wideWhatBuffer.end());
 }
 
 const wchar_t* FxException::GetType() const noexcept
@@ -40,11 +39,10 @@ int FxException::GetLine() const noexcept
 
 const std::wstring& FxException::GetFile() const noexcept
 {
-	return L"";
+	return m_szFile;
 }
 
 std::wstring FxException::GetOriginString() const noexcept
 {
 	return std::wstring();
 }
-

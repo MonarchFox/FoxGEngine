@@ -45,4 +45,4 @@
 
 #define STRICT
 
-#include <Windows.h>
+#include <windows.h>

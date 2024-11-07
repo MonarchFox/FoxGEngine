@@ -1,11 +1,15 @@
 #pragma once
 
-#include "../FxWinCore.h"
+#include "FxKeyboard.h"
+#include "FxMouse.h"
+
+#include "FxWinCore.h"
 #include "../../ExcepSystem/Public/FxException.h"
 
 #include <string>
 #include <optional>
 #include <memory>
+
 
 class FxWindow
 {
@@ -20,6 +24,11 @@ public:
 	void SetTitle(const std::wstring_view& title);
 
 	static std::optional<int> ProcessMessages() noexcept;
+
+public:
+	//~ Public Members
+	FxKeyboard  m_Keyboard;
+	FxMouse		m_Mouse;
 
 private:
 	
@@ -69,5 +78,5 @@ private:
 	};
 };
 
-
 #define FXWND_EXCEPT(hr) FxWindow::FxWinException(__LINE__, __FILE__, hr);
+#define FXWND_LAST_EXCEPT() FxWindow::FxWinException(__LINE__, __FILE__, GetLastError());

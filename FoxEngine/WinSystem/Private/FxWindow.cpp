@@ -1,6 +1,9 @@
 #include "../Public/FxWindow.h"
 #include <sstream>
 
+#include "../../../resource.h"
+
+
 #pragma region FOX_WINDOW
 
 FxWindow::_FxWindowClass FxWindow::_FxWindowClass::m_sWindowClass;
@@ -9,7 +12,10 @@ FxWindow::FxWindow(RECT windowRect, const wchar_t* windowName)
 	: m_sRect(windowRect)
 {
 	// calculate window size based on desired client region size
-	AdjustWindowRect(&m_sRect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE);
+	if (!AdjustWindowRect(&m_sRect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE))
+	{
+		throw FXWND_LAST_EXCEPT();
+	}
 
 	// create window & get hWnd
 	m_hWnd = CreateWindow(
@@ -21,6 +27,8 @@ FxWindow::FxWindow(RECT windowRect, const wchar_t* windowName)
 		m_sRect.right - m_sRect.left, m_sRect.bottom - m_sRect.top,
 		nullptr, nullptr, _FxWindowClass::GetInstance(), this
 	);
+
+	if (m_hWnd == nullptr) throw FXWND_LAST_EXCEPT();
 
 	ShowWindow(m_hWnd, SW_SHOWDEFAULT);
 	
@@ -80,9 +88,97 @@ LRESULT FxWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 {
 	switch (msg)
 	{
-	case WM_DESTROY:
+	case WM_DESTROY: 
+	{
 		PostQuitMessage(0);
 		return S_OK;
+	}
+	case WM_SYSKEYDOWN:
+	case WM_KEYDOWN:
+	{
+		if (!(lParam & 0x4'00'00'000) || m_Keyboard.IsAutoRepeatEnabled())
+		{
+			m_Keyboard.OnKeyPressed(static_cast<unsigned char>(wParam));
+		}
+		return S_OK;
+	}
+	case WM_SYSKEYUP:
+	case WM_KEYUP:
+	{
+		m_Keyboard.OnKeyReleased(static_cast<unsigned char>(wParam));
+		return S_OK;
+	}
+	case WM_CHAR:
+	{
+		m_Keyboard.OnChar(static_cast<char>(wParam));
+		return S_OK;
+	}
+	case WM_KILLFOCUS:
+	{
+		m_Keyboard.ClearState();
+		return S_OK;
+	}
+	case WM_LBUTTONDOWN:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		m_Mouse.OnLeftMousePressed(point.x, point.y);
+		return S_OK;
+	}
+	case WM_LBUTTONUP:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		m_Mouse.OnLeftMouseRelased(point.x, point.y);
+		return S_OK;
+	}
+	case WM_RBUTTONDOWN:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		m_Mouse.OnRightMousePressed(point.x, point.y);
+		return S_OK;
+	}
+	case WM_RBUTTONUP:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		m_Mouse.OnRightMouseRelased(point.x, point.y);
+		return S_OK;
+	}
+	case WM_MOUSEWHEEL:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		auto wheelValue = GET_WHEEL_DELTA_WPARAM(wParam);
+
+		if (wheelValue > 0) m_Mouse.OnWheelMouseUp(point.x, point.y);
+		if (wheelValue < 0) m_Mouse.OnWheelMouseDown(point.x, point.y);
+
+		return S_OK;
+	}
+	case WM_MBUTTONDOWN:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		m_Mouse.OnWheelMousePressed(point.x, point.y);
+		return S_OK;
+	}
+	case WM_MBUTTONUP:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		m_Mouse.OnWheelMouseReleased(point.x, point.y);
+		return S_OK;
+	}
+	case WM_MOUSEMOVE:
+	{
+		const POINTS point = MAKEPOINTS(lParam);
+		m_Mouse.OnMouseMove(point.x, point.y);
+
+		std::wstring text = L"[";
+		text.append(std::to_wstring(point.x));
+		text.append(L", ");
+		text.append(std::to_wstring(point.y));
+		text.append(L"]");
+		
+		SetTitle(text);
+
+		return S_OK;
+	}
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
@@ -112,8 +208,8 @@ FxWindow::_FxWindowClass::_FxWindowClass() noexcept
 	wnd.cbWndExtra = 0;
 	wnd.hbrBackground = nullptr;
 	wnd.hCursor = nullptr;
-	wnd.hIcon = nullptr;
-	wnd.hIconSm = nullptr;
+	wnd.hIcon = static_cast<HICON>(LoadImage(m_hInstance, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 32, 32, 0));
+	wnd.hIconSm = static_cast<HICON>(LoadImage(m_hInstance, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 16, 16, 0));
 	wnd.hInstance = m_hInstance;
 	wnd.lpfnWndProc = HandleMessageSetup;
 	wnd.lpszClassName = GetName();
@@ -150,7 +246,7 @@ void FxWindow::FxWinException::UpdateInfo() noexcept
 		<< L"[Description] " << GetErrorString() << std::endl
 		<< GetOriginString();
 
-	SetInfo(woss.str());
+	WhatBuffer = woss.str();
 }
 
 std::wstring FxWindow::FxWinException::TranslateErrorCode(HRESULT hr) noexcept
