@@ -13,10 +13,18 @@
     <ClCompile Include="FoxEngine\WinSystem\Private\FxKeyboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FoxEngine\WinSystem\Private\FxMouse.cpp" />
-    <ClCompile Include="FoxEngine\WinSystem\Private\FxTimer.cpp" />
-    <ClCompile Include="FoxEngine\Application\Private\Application.cpp" />
-    <ClCompile Include="FoxEngine\Renderer\Private\FxRenderAPI.cpp" />
+    <ClCompile Include="FoxEngine\Application\Private\Application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FoxEngine\WinSystem\Private\FxMouse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FoxEngine\Renderer\Private\FxRenderAPI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FoxEngine\WinSystem\Private\FxTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FoxEngine\ExceptionHandler\Public\FxException.h">
@@ -32,10 +40,18 @@
     <ClInclude Include="FoxEngine\WinSystem\Public\FxKeyboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FoxEngine\WinSystem\Public\FxMouse.h" />
-    <ClInclude Include="FoxEngine\WinSystem\Public\FxTimer.h" />
-    <ClInclude Include="FoxEngine\Application\Public\Application.h" />
-    <ClInclude Include="FoxEngine\Renderer\Public\FxRenderAPI.h" />
+    <ClInclude Include="FoxEngine\WinSystem\Public\FxMouse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FoxEngine\Application\Public\Application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FoxEngine\Renderer\Public\FxRenderAPI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FoxEngine\WinSystem\Public\FxTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -55,5 +71,11 @@
     <Image Include="Resource\fox_icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="FoxEngine\Renderer\Shader\VertexShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="FoxEngine\Renderer\Shader\PixelShader.hlsl" />
   </ItemGroup>
 </Project>

@@ -8,7 +8,7 @@
 
 
 FxApplication::FxApplication()
-	:mWindow({0, 0, 800, 300}, L"Fox Application")
+	:mWindow({0, 0, 1280, 720}, L"Fox Application")
 {
 	mTimer.Reset();
 }
@@ -41,7 +41,10 @@ void FxApplication::Tick()
 	const float color[]{ std::max(1.f, c + 0.2f), std::max(1.f - c, 0.0f), .41212f, c };
 
 	mWindow.RenderAPI().ClearRenderTarget(color);
-	mWindow.RenderAPI().EndFrame();
+	mWindow.RenderAPI().InitDrawTriangle();
+	mWindow.RenderAPI().DrawTriangleTest();
 	//~ Ticking Game Timer.
 	mTimer.Tick();
+	mWindow.RenderAPI().PresentFrame();
 }
+
